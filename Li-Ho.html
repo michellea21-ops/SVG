@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belajar Bahasa Hokkien</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #cover {
+            background-image: url('Logo.svg'); /* Ganti dengan gambar cover Anda */
+            background-size: cover;
+            background-position: center;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        #menu {
+            display: none;
+            text-align: center;
+        }
+        .menu-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 200px;
+        }
+        .menu-item:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="cover" onclick="showMenu()">
+    </div>
+
+    <div id="menu">
+        
+        <div class="menu-item" onclick="startGame()">Play</div>
+        <div class="menu-item" onclick="showSettings()">Settings</div>
+        <div class="menu-item" onclick="exitGame()">Exit Game</div>
+    </div>
+
+    <script>
+        function showMenu() {
+            document.getElementById('cover').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+
+        function startGame() {
+            alert("Game dimulai!");
+            // Di sini Anda bisa menambahkan logika untuk memulai permainan
+        }
+
+        function showSettings() {
+            alert("Pengaturan belum tersedia.");
+        }
+
+        function exitGame() {
+            if (confirm("Apakah Anda yakin ingin keluar dari permainan?")) {
+                window.close(); // Ini mungkin tidak berfungsi di semua browser.
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belajar Bahasa Hokkien</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #cover {
+            width: 100%;
+            height: 100%;
+            background-image: url('Mainmenu.svg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .button-overlay {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        
+        .button-overlay:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        /* Button positions based on the SVG layout */
+        #play-btn {
+            width: 19.5%;
+            height: 14.8%;
+            top: 48.6%;
+            left: 40.9%;
+        }
+        
+        #settings-btn {
+            width: 14.4%;
+            height: 10.9%;
+            top: 66.6%;
+            left: 43.6%;
+        }
+        
+        #exit-btn {
+            width: 14.4%;
+            height: 10.9%;
+            top: 80.6%;
+            left: 43.5%;
+        }
+        #menu {
+            display: none;
+            text-align: center;
+        }
+        .menu-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 200px;
+        }
+        .menu-item:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="cover">
+        <!-- Invisible button overlays positioned over the SVG buttons -->
+        <div id="play-btn" class="button-overlay" onclick="startGame()"></div>
+        <div id="settings-btn" class="button-overlay" onclick="showSettings()"></div>
+        <div id="exit-btn" class="button-overlay" onclick="exitGame()"></div>
+    </div>
+
+    <div id="menu">
+        
+        <div class="menu-item" onclick="startGame()">Play</div>
+        <div class="menu-item" onclick="showSettings()">Settings</div>
+        <div class="menu-item" onclick="exitGame()">Exit Game</div>
+    </div>
+
+    <script>
+        function showMenu() {
+            document.getElementById('cover').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+
+        function startGame() {
+            alert("Game dimulai!");
+            // Di sini Anda bisa menambahkan logika untuk memulai permainan
+        }
+
+        function showSettings() {
+            alert("Pengaturan belum tersedia.");
+        }
+
+        function exitGame() {
+            if (confirm("Apakah Anda yakin ingin keluar dari permainan?")) {
+                window.close(); // Ini mungkin tidak berfungsi di semua browser.
+            }
+        }
+    </script>
+</body>
+</html>

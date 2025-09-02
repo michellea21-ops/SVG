@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belajar Bahasa Hokkien - Canvas Version</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Language Toggle */
+        .language-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Toggle Button -->
+    <div class="language-toggle" onclick="toggleLanguage()" id="lang-toggle">🇺🇸 EN</div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentLanguage = 'en';
+        let backgroundImage = new Image();
+        let isImageLoaded = false;
+        let isHoveringHand = false;
+        let waveAngle = 0;
+        let animationId = null;
+        
+        // Button positions (percentages of canvas size)
+        const buttons = {
+            play: { x: 0.409, y: 0.486, width: 0.195, height: 0.148 },
+            settings: { x: 0.436, y: 0.666, width: 0.144, height: 0.109 },
+            exit: { x: 0.435, y: 0.806, width: 0.144, height: 0.109 }
+        };
+        
+        // Panda hand area (left hand - approximate position)
+        const handArea = { x: 0.32, y: 0.75, width: 0.12, height: 0.2 };
+        
+        const translations = {
+            en: {
+                play: "PLAY",
+                settings: "Settings", 
+                exit: "exit game",
+                toggleButton: "🇺🇸 EN",
+                gameStart: "Game started! Starting Hokkien language learning...",
+                settingsMsg: "Opening Settings...\n\nSettings options:\n- Sound Volume\n- Language Preference\n- Difficulty Level",
+                exitConfirm: "Are you sure you want to exit the Hokkien learning game?",
+                exitMsg: "Thanks for playing! 再見 (Zài jiàn)!"
+            },
+            id: {
+                play: "MAIN",
+                settings: "Pengaturan",
+                exit: "keluar game", 
+                toggleButton: "🇮🇩 ID",
+                gameStart: "Game dimulai! Memulai pembelajaran bahasa Hokkien...",
+                settingsMsg: "Membuka Pengaturan...\n\nOpsi pengaturan:\n- Volume Suara\n- Preferensi Bahasa\n- Tingkat Kesulitan",
+                exitConfirm: "Apakah Anda yakin ingin keluar dari game pembelajaran Hokkien?",
+                exitMsg: "Terima kasih telah bermain! 再見 (Zài jiàn)!"
+            }
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Set canvas size
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            // Redraw if image is loaded
+            if (isImageLoaded) {
+                drawGame();
+            }
+        }
+
+        function drawGame() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate drawing dimensions
+            const aspectRatio = 2196.83 / 1081.22;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            // Draw background image first
+            ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
+            
+            // If hovering hand, draw a waving indicator
+            if (isHoveringHand) {
+                const handCenterX = drawX + (drawWidth * (handArea.x + handArea.width/2));
+                const handCenterY = drawY + (drawHeight * (handArea.y + handArea.height/2));
+                
+                // Draw waving hand emoji that moves
+                ctx.save();
+                ctx.translate(handCenterX, handCenterY);
+                ctx.rotate(Math.sin(waveAngle) * 0.5); // Wave animation
+                ctx.font = `${Math.floor(drawHeight * 0.08)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('👋', 0, 0);
+                ctx.restore();
+            }
+            
+            // Clear original text areas and draw new text
+            const lang = translations[currentLanguage];
+            
+            // Clear and redraw button text areas
+            ctx.fillStyle = '#a26b4a'; // Same as button background color
+            
+            // Play button text area (larger)
+            const playX = drawX + (drawWidth * 0.409);
+            const playY = drawY + (drawHeight * 0.486);
+            const playWidth = drawWidth * 0.195;
+            const playHeight = drawHeight * 0.148;
+            ctx.fillRect(playX, playY, playWidth, playHeight);
+            
+            // Settings button text area
+            const settingsX = drawX + (drawWidth * 0.436);
+            const settingsY = drawY + (drawHeight * 0.666);
+            const settingsWidth = drawWidth * 0.144;
+            const settingsHeight = drawHeight * 0.109;
+            ctx.fillRect(settingsX, settingsY, settingsWidth, settingsHeight);
+            
+            // Exit button text area
+            const exitX = drawX + (drawWidth * 0.435);
+            const exitY = drawY + (drawHeight * 0.806);
+            const exitWidth = drawWidth * 0.144;
+            const exitHeight = drawHeight * 0.109;
+            ctx.fillRect(exitX, exitY, exitWidth, exitHeight);
+            
+            // Draw text
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Play button text
+            ctx.font = `bold ${Math.floor(drawHeight * 0.055)}px Arial`;
+            ctx.fillText(lang.play, playX + playWidth/2, playY + playHeight/2);
+            
+            // Settings button text
+            ctx.font = `bold ${Math.floor(drawHeight * 0.037)}px Arial`;
+            ctx.fillText(lang.settings, settingsX + settingsWidth/2, settingsY + settingsHeight/2);
+            
+            // Exit button text
+            ctx.font = `bold ${Math.floor(drawHeight * 0.032)}px Arial`;
+            ctx.fillText(lang.exit, exitX + exitWidth/2, exitY + exitHeight/2);
+        }
+        
+        function animate() {
+            if (isHoveringHand) {
+                waveAngle += 0.15; // Animation speed
+                drawGame();
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'id' : 'en';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            
+            // Update language toggle button
+            document.getElementById('lang-toggle').textContent = lang.toggleButton;
+            
+            // Redraw canvas with new language
+            if (isImageLoaded) {
+                drawGame();
+            }
+        }
+
+        function getClickedButton(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            
+            // Convert to relative coordinates
+            const relX = canvasX / canvas.width;
+            const relY = canvasY / canvas.height;
+            
+            // Check which button was clicked
+            for (const [buttonName, button] of Object.entries(buttons)) {
+                if (relX >= button.x && relX <= button.x + button.width &&
+                    relY >= button.y && relY <= button.y + button.height) {
+                    return buttonName;
+                }
+            }
+            return null;
+        }
+        
+        function isPointInHandArea(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            
+            // Convert to relative coordinates
+            const relX = canvasX / canvas.width;
+            const relY = canvasY / canvas.height;
+            
+            return relX >= handArea.x && relX <= handArea.x + handArea.width &&
+                   relY >= handArea.y && relY <= handArea.y + handArea.height;
+        }
+
+        // Game functions
+        function startGame() {
+            const lang = translations[currentLanguage];
+            // Navigate to game level 1
+            window.location.href = 'game-level-1.html';
+        }
+
+        function showSettings() {
+            window.location.href = 'settings-canvas.html';
+        }
+
+        function exitGame() {
+            const lang = translations[currentLanguage];
+            if (confirm(lang.exitConfirm)) {
+                alert(lang.exitMsg);
+            }
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', function(event) {
+            const clickedButton = getClickedButton(event.clientX, event.clientY);
+            
+            switch(clickedButton) {
+                case 'play':
+                    startGame();
+                    break;
+                case 'settings':
+                    showSettings();
+                    break;
+                case 'exit':
+                    exitGame();
+                    break;
+            }
+        });
+        
+        canvas.addEventListener('mousemove', function(event) {
+            const wasHovering = isHoveringHand;
+            isHoveringHand = isPointInHandArea(event.clientX, event.clientY);
+            
+            if (isHoveringHand && !wasHovering) {
+                // Start waving animation
+                waveAngle = 0;
+                animate();
+                canvas.style.cursor = 'pointer';
+            } else if (!isHoveringHand && wasHovering) {
+                // Stop waving animation
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                drawGame(); // Redraw without rotation
+                canvas.style.cursor = 'default';
+            }
+        });
+        
+        canvas.addEventListener('mouseleave', function() {
+            if (isHoveringHand) {
+                isHoveringHand = false;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                drawGame();
+                canvas.style.cursor = 'default';
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                startGame();
+            } else if (event.key === 's' || event.key === 'S') {
+                showSettings();
+            } else if (event.key === 'Escape') {
+                exitGame();
+            } else if (event.key === 'l' || event.key === 'L') {
+                toggleLanguage();
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', resizeCanvas);
+
+        // Initialize
+        backgroundImage.onload = function() {
+            isImageLoaded = true;
+            resizeCanvas();
+        };
+        
+        backgroundImage.src = 'Mainmenu.svg';
+        
+        // Initialize with default language
+        document.addEventListener('DOMContentLoaded', function() {
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>

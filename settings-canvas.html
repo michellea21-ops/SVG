@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Hokkien Learning Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #settingsCanvas {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Back button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Back button -->
+    <div class="back-button" onclick="goBack()">← Back to Menu</div>
+    
+    <canvas id="settingsCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('settingsCanvas');
+        const ctx = canvas.getContext('2d');
+        let backgroundImage = new Image();
+        let isImageLoaded = false;
+        let currentLanguage = 'en';
+        let currentVolume = 75;
+        
+        // Settings areas based on Setting page.svg layout
+        const settingAreas = {
+            languageDropdown: { 
+                x: 0.51, y: 0.37, width: 0.112, height: 0.059,
+                type: 'dropdown',
+                options: ['English', 'Indonesian', '中文']
+            },
+            volumeSlider: { 
+                x: 0.45, y: 0.56, width: 0.2, height: 0.03,
+                type: 'slider',
+                min: 0, max: 100, value: 75
+            },
+            closeButton: { 
+                x: 0.935, y: 0.05, width: 0.034, height: 0.06,
+                type: 'button'
+            }
+        };
+        
+        const translations = {
+            en: {
+                title: "Settings",
+                language: "Language",
+                volume: "Volume",
+                close: "Close"
+            },
+            id: {
+                title: "Pengaturan",
+                language: "Bahasa", 
+                volume: "Volume",
+                close: "Tutup"
+            },
+            zh: {
+                title: "設定",
+                language: "語言",
+                volume: "音量",
+                close: "關閉"
+            }
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            if (isImageLoaded) {
+                drawSettings();
+            }
+        }
+
+        function drawSettings() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background SVG
+            const aspectRatio = backgroundImage.width / backgroundImage.height;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
+            
+            // Draw interactive overlays
+            drawLanguageSelector(drawX, drawY, drawWidth, drawHeight);
+            drawVolumeSlider(drawX, drawY, drawWidth, drawHeight);
+        }
+        
+        function drawLanguageSelector(drawX, drawY, drawWidth, drawHeight) {
+            const area = settingAreas.languageDropdown;
+            const x = drawX + (drawWidth * area.x);
+            const y = drawY + (drawHeight * area.y);
+            const width = drawWidth * area.width;
+            const height = drawHeight * area.height;
+            
+            // Clear the dropdown area
+            ctx.fillStyle = '#6c2d00';
+            ctx.fillRect(x, y, width, height);
+            
+            // Draw current language text
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.floor(drawHeight * 0.035)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const languages = ['English', 'Indonesian', '中文'];
+            const currentLangIndex = currentLanguage === 'en' ? 0 : currentLanguage === 'id' ? 1 : 2;
+            ctx.fillText(languages[currentLangIndex], x + width/2, y + height/2);
+        }
+        
+        function drawVolumeSlider(drawX, drawY, drawWidth, drawHeight) {
+            const area = settingAreas.volumeSlider;
+            const x = drawX + (drawWidth * area.x);
+            const y = drawY + (drawHeight * area.y);
+            const width = drawWidth * area.width;
+            const height = drawHeight * area.height;
+            
+            // Draw slider track
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(x, y + height*0.4, width, height*0.2);
+            
+            // Draw slider fill
+            const fillWidth = (width * currentVolume) / 100;
+            ctx.fillStyle = '#42c148';
+            ctx.fillRect(x, y + height*0.4, fillWidth, height*0.2);
+            
+            // Draw slider thumb
+            const thumbX = x + fillWidth - 8;
+            const thumbY = y + height*0.2;
+            const thumbSize = height*0.6;
+            
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#42c148';
+            ctx.lineWidth = 2;
+            ctx.fillRect(thumbX, thumbY, 16, thumbSize);
+            ctx.strokeRect(thumbX, thumbY, 16, thumbSize);
+            
+            // Draw volume percentage
+            ctx.fillStyle = '#333';
+            ctx.font = `bold ${Math.floor(drawHeight * 0.025)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(currentVolume + '%', x + width + 30, y + height/2);
+        }
+
+        function getClickedArea(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            
+            // Calculate drawing dimensions
+            const aspectRatio = backgroundImage.width / backgroundImage.height;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            // Convert to relative coordinates
+            const relX = (canvasX - drawX) / drawWidth;
+            const relY = (canvasY - drawY) / drawHeight;
+            
+            // Check if click is within image bounds
+            if (relX < 0 || relX > 1 || relY < 0 || relY > 1) {
+                return null;
+            }
+            
+            // Check which area was clicked
+            for (const [areaName, area] of Object.entries(settingAreas)) {
+                if (relX >= area.x && relX <= area.x + area.width &&
+                    relY >= area.y && relY <= area.y + area.height) {
+                    return { name: areaName, area: area, relX: relX, relY: relY };
+                }
+            }
+            return null;
+        }
+
+        function handleLanguageClick() {
+            // Cycle through languages
+            if (currentLanguage === 'en') {
+                currentLanguage = 'id';
+            } else if (currentLanguage === 'id') {
+                currentLanguage = 'zh';
+            } else {
+                currentLanguage = 'en';
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('hokkienGameLanguage', currentLanguage);
+            drawSettings();
+        }
+        
+        function handleVolumeClick(relX, area) {
+            // Calculate volume based on click position within slider
+            const clickPosition = (relX - area.x) / area.width;
+            currentVolume = Math.max(0, Math.min(100, Math.round(clickPosition * 100)));
+            
+            // Save to localStorage
+            localStorage.setItem('hokkienGameVolume', currentVolume);
+            drawSettings();
+        }
+        
+        function handleCloseClick() {
+            goBack();
+        }
+
+        function goBack() {
+            window.location.href = 'Li-Ho-canvas.html';
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', function(event) {
+            const clickedArea = getClickedArea(event.clientX, event.clientY);
+            
+            if (clickedArea) {
+                switch(clickedArea.name) {
+                    case 'languageDropdown':
+                        handleLanguageClick();
+                        break;
+                    case 'volumeSlider':
+                        handleVolumeClick(clickedArea.relX, clickedArea.area);
+                        break;
+                    case 'closeButton':
+                        handleCloseClick();
+                        break;
+                }
+            }
+        });
+
+        // Hover effect for cursor
+        canvas.addEventListener('mousemove', function(event) {
+            const hoveredArea = getClickedArea(event.clientX, event.clientY);
+            
+            if (hoveredArea) {
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                goBack();
+            } else if (event.key === 'l' || event.key === 'L') {
+                handleLanguageClick();
+            } else if (event.key === 'ArrowUp') {
+                currentVolume = Math.min(100, currentVolume + 5);
+                localStorage.setItem('hokkienGameVolume', currentVolume);
+                drawSettings();
+            } else if (event.key === 'ArrowDown') {
+                currentVolume = Math.max(0, currentVolume - 5);
+                localStorage.setItem('hokkienGameVolume', currentVolume);
+                drawSettings();
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', resizeCanvas);
+
+        // Load saved settings
+        function loadSettings() {
+            const savedLanguage = localStorage.getItem('hokkienGameLanguage');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+            }
+            
+            const savedVolume = localStorage.getItem('hokkienGameVolume');
+            if (savedVolume) {
+                currentVolume = parseInt(savedVolume);
+            }
+        }
+
+        // Initialize
+        backgroundImage.onload = function() {
+            isImageLoaded = true;
+            resizeCanvas();
+        };
+        
+        backgroundImage.src = 'Screen/Setting page.svg';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>

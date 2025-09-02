@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Hokkien Learning Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .settings-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: bold;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+        }
+        
+        .setting-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(240, 240, 240, 0.7);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .setting-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+        
+        .setting-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        /* Volume Control */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .volume-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .volume-display {
+            min-width: 40px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* Language Selection */
+        .language-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .language-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: bold;
+        }
+        
+        .language-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .language-option:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+        
+        /* Difficulty Selection */
+        .difficulty-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .difficulty-option {
+            padding: 12px 25px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: bold;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .difficulty-option.active {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+        
+        .difficulty-option.easy.active {
+            background: #48bb78;
+            border-color: #48bb78;
+        }
+        
+        .difficulty-option.medium.active {
+            background: #ed8936;
+            border-color: #ed8936;
+        }
+        
+        .difficulty-option:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Game Features */
+        .feature-toggles {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .toggle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #667eea;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+            transform: scale(1.05);
+        }
+        
+        .reset-progress {
+            background: #f56565;
+            color: white;
+        }
+        
+        .reset-progress:hover {
+            background: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="header">
+            <h1>⚙️ Game Settings</h1>
+            <p>Customize your Hokkien learning experience</p>
+        </div>
+        
+        <!-- Sound Settings -->
+        <div class="setting-group">
+            <div class="setting-label">🔊 Sound Volume</div>
+            <div class="setting-description">Adjust game sound effects and pronunciation audio</div>
+            <div class="volume-control">
+                <span>🔇</span>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75">
+                <span>🔊</span>
+                <div class="volume-display" id="volumeDisplay">75%</div>
+            </div>
+        </div>
+        
+        <!-- Language Preference -->
+        <div class="setting-group">
+            <div class="setting-label">🌐 Default Language</div>
+            <div class="setting-description">Choose your preferred interface language</div>
+            <div class="language-options">
+                <div class="language-option active" data-lang="en">🇺🇸 English</div>
+                <div class="language-option" data-lang="id">🇮🇩 Indonesian</div>
+                <div class="language-option" data-lang="hk">🇹🇼 Traditional Chinese</div>
+            </div>
+        </div>
+        
+        <!-- Difficulty Level -->
+        <div class="setting-group">
+            <div class="setting-label">🎯 Difficulty Level</div>
+            <div class="setting-description">Choose how challenging the object finding should be</div>
+            <div class="difficulty-options">
+                <div class="difficulty-option easy" data-difficulty="easy">
+                    <div>🟢 Easy</div>
+                    <small>Larger click areas</small>
+                </div>
+                <div class="difficulty-option medium active" data-difficulty="medium">
+                    <div>🟡 Medium</div>
+                    <small>Standard areas</small>
+                </div>
+                <div class="difficulty-option hard" data-difficulty="hard">
+                    <div>🔴 Hard</div>
+                    <small>Precise clicking</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Features -->
+        <div class="setting-group">
+            <div class="setting-label">🎮 Game Features</div>
+            <div class="setting-description">Enable or disable game features</div>
+            <div class="feature-toggles">
+                <div class="toggle-item">
+                    <span>Show object hints after 30 seconds</span>
+                    <div class="toggle-switch active" data-feature="hints">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="toggle-item">
+                    <span>Play pronunciation audio when object found</span>
+                    <div class="toggle-switch active" data-feature="pronunciation">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="toggle-item">
+                    <span>Show Hokkien characters in traditional script</span>
+                    <div class="toggle-switch active" data-feature="traditional">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="toggle-item">
+                    <span>Enable keyboard shortcuts</span>
+                    <div class="toggle-switch active" data-feature="keyboard">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="toggle-item">
+                    <span>Show progress statistics</span>
+                    <div class="toggle-switch active" data-feature="stats">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Management -->
+        <div class="setting-group">
+            <div class="setting-label">📊 Progress Management</div>
+            <div class="setting-description">Manage your learning progress and achievements</div>
+            <div class="button-group">
+                <button class="btn reset-progress" onclick="resetProgress()">🗑️ Reset All Progress</button>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+            <a href="Li-Ho-canvas.html" class="btn btn-secondary">← Back to Menu</a>
+        </div>
+    </div>
+
+    <script>
+        // Settings data structure
+        let gameSettings = {
+            volume: 75,
+            language: 'en',
+            difficulty: 'medium',
+            features: {
+                hints: true,
+                pronunciation: true,
+                traditional: true,
+                keyboard: true,
+                stats: true
+            }
+        };
+        
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('hokkienGameSettings');
+            if (saved) {
+                gameSettings = { ...gameSettings, ...JSON.parse(saved) };
+            }
+            updateUI();
+        }
+        
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('hokkienGameSettings', JSON.stringify(gameSettings));
+            
+            // Show success message
+            const originalText = event.target.textContent;
+            event.target.textContent = '✅ Saved!';
+            event.target.style.background = '#48bb78';
+            
+            setTimeout(() => {
+                event.target.textContent = originalText;
+                event.target.style.background = '#667eea';
+            }, 1500);
+        }
+        
+        // Update UI to reflect current settings
+        function updateUI() {
+            // Volume slider
+            document.getElementById('volumeSlider').value = gameSettings.volume;
+            document.getElementById('volumeDisplay').textContent = gameSettings.volume + '%';
+            
+            // Language selection
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.lang === gameSettings.language) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Difficulty selection
+            document.querySelectorAll('.difficulty-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.difficulty === gameSettings.difficulty) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Feature toggles
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                const feature = toggle.dataset.feature;
+                if (gameSettings.features[feature]) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            });
+        }
+        
+        // Volume control
+        document.getElementById('volumeSlider').addEventListener('input', function(e) {
+            gameSettings.volume = parseInt(e.target.value);
+            document.getElementById('volumeDisplay').textContent = gameSettings.volume + '%';
+        });
+        
+        // Language selection
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.language-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                gameSettings.language = this.dataset.lang;
+            });
+        });
+        
+        // Difficulty selection
+        document.querySelectorAll('.difficulty-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.difficulty-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                gameSettings.difficulty = this.dataset.difficulty;
+            });
+        });
+        
+        // Feature toggles
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const feature = this.dataset.feature;
+                gameSettings.features[feature] = !gameSettings.features[feature];
+                
+                if (gameSettings.features[feature]) {
+                    this.classList.add('active');
+                } else {
+                    this.classList.remove('active');
+                }
+            });
+        });
+        
+        // Reset progress
+        function resetProgress() {
+            const languages = {
+                en: "Are you sure you want to reset all progress? This will clear all completed levels and scores.",
+                id: "Apakah Anda yakin ingin mengatur ulang semua kemajuan? Ini akan menghapus semua level dan skor yang telah diselesaikan.",
+                hk: "你確定要重設所有進度嗎？這將清除所有已完成的關卡和分數。"
+            };
+            
+            const confirmMessages = {
+                en: "Progress reset successfully! All levels unlocked again.",
+                id: "Kemajuan berhasil direset! Semua level terbuka kembali.",
+                hk: "進度重設成功！所有關卡重新開放。"
+            };
+            
+            const message = languages[gameSettings.language] || languages.en;
+            const successMessage = confirmMessages[gameSettings.language] || confirmMessages.en;
+            
+            if (confirm(message)) {
+                // Clear any saved progress
+                localStorage.removeItem('hokkienGameProgress');
+                localStorage.removeItem('hokkienGameScores');
+                
+                alert(successMessage);
+            }
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.location.href = 'Li-Ho-canvas.html';
+            } else if (event.key === 's' || event.key === 'S') {
+                saveSettings();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+        });
+    </script>
+</body>
+</html>

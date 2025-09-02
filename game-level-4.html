@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level 4 - Study Room | Hokkien Learning</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            cursor: crosshair;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Back button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+        
+        /* Next level button */
+        .next-button {
+            position: absolute;
+            top: 20px;
+            left: 200px;
+            z-index: 20;
+            background: rgba(0, 150, 255, 0.9);
+            color: white;
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .next-button:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: scale(1.05);
+        }
+        
+        /* Score display */
+        .score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 20;
+            background: rgba(0, 150, 0, 0.8);
+            color: white;
+            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        /* Object info popup */
+        .object-info {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 30;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back button -->
+    <div class="back-button" onclick="goBack()">← Back to Level 3</div>
+    
+    <!-- Next level button -->
+    <div class="next-button" id="nextButton" onclick="goToNextLevel()">Next Level →</div>
+    
+    <!-- Score display -->
+    <div class="score-display" id="score">Score: 0/9</div>
+    
+    <!-- Object info popup -->
+    <div class="object-info" id="objectInfo"></div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let backgroundImage = new Image();
+        let isImageLoaded = false;
+        let score = 0;
+        let totalObjects = 9;
+        let foundObjects = new Set();
+        
+        // Object positions for study room scene (coordinates based on 4.jpg layout)
+        const objects = {
+            newspaper: { 
+                x: 0.12, y: 0.22, width: 0.08, height: 0.12,
+                hokkien: "新聞紙 (sin-bûn-chóa)",
+                english: "Newspaper",
+                indonesian: "Koran",
+                svg: "Newspaper.svg"
+            },
+            father: { 
+                x: 0.38, y: 0.12, width: 0.24, height: 0.68,
+                hokkien: "阿爸 (a-pa)",
+                english: "Father",
+                indonesian: "Ayah",
+                svg: "Father.svg"
+            },
+            tv: { 
+                x: 0.82, y: 0.08, width: 0.16, height: 0.25,
+                hokkien: "電視 (tiān-sī)",
+                english: "Television",
+                indonesian: "Televisi",
+                svg: "TV.svg"
+            },
+            phone: { 
+                x: 0.68, y: 0.58, width: 0.08, height: 0.12,
+                hokkien: "電話 (tiān-ōe)",
+                english: "Phone",
+                indonesian: "Telepon",
+                svg: "Phone.svg"
+            },
+            pen: { 
+                x: 0.72, y: 0.42, width: 0.03, height: 0.08,
+                hokkien: "筆 (pit)",
+                english: "Pen",
+                indonesian: "Pulpen",
+                svg: "Pen.svg"
+            },
+            pencil: { 
+                x: 0.76, y: 0.42, width: 0.03, height: 0.08,
+                hokkien: "鉛筆 (iân-pit)",
+                english: "Pencil",
+                indonesian: "Pensil",
+                svg: "Pencil.svg"
+            },
+            paper: { 
+                x: 0.68, y: 0.35, width: 0.12, height: 0.15,
+                hokkien: "紙 (chóa)",
+                english: "Paper",
+                indonesian: "Kertas",
+                svg: "Paper.svg"
+            },
+            notes: { 
+                x: 0.82, y: 0.42, width: 0.08, height: 0.12,
+                hokkien: "筆記 (pit-kì)",
+                english: "Notes",
+                indonesian: "Catatan",
+                svg: "Notes.svg"
+            },
+            eraser: { 
+                x: 0.91, y: 0.58, width: 0.04, height: 0.04,
+                hokkien: "橡皮擦 (chhiūⁿ-phôe-chhat)",
+                english: "Eraser",
+                indonesian: "Penghapus",
+                svg: "Eraser.svg"
+            }
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            if (isImageLoaded) {
+                drawGame();
+            }
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background image (4.jpg)
+            const aspectRatio = backgroundImage.width / backgroundImage.height;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
+            
+            // Draw found object indicators
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            foundObjects.forEach(objectName => {
+                const obj = objects[objectName];
+                if (obj) {
+                    const objX = drawX + (drawWidth * obj.x);
+                    const objY = drawY + (drawHeight * obj.y);
+                    const objWidth = drawWidth * obj.width;
+                    const objHeight = drawHeight * obj.height;
+                    
+                    ctx.strokeRect(objX, objY, objWidth, objHeight);
+                    
+                    // Add checkmark
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✓', objX + objWidth/2, objY - 10);
+                }
+            });
+        }
+
+        function getClickedObject(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            
+            // Calculate drawing dimensions to match drawGame function
+            const aspectRatio = backgroundImage.width / backgroundImage.height;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            // Convert to relative coordinates within the actual image bounds
+            const relX = (canvasX - drawX) / drawWidth;
+            const relY = (canvasY - drawY) / drawHeight;
+            
+            // Check if click is within image bounds
+            if (relX < 0 || relX > 1 || relY < 0 || relY > 1) {
+                return null;
+            }
+            
+            // Check which object was clicked (smallest objects first to avoid overlap issues)
+            const objectEntries = Object.entries(objects).sort((a, b) => {
+                const areaA = a[1].width * a[1].height;
+                const areaB = b[1].width * b[1].height;
+                return areaA - areaB;
+            });
+            
+            for (const [objectName, obj] of objectEntries) {
+                if (relX >= obj.x && relX <= obj.x + obj.width &&
+                    relY >= obj.y && relY <= obj.y + obj.height) {
+                    return objectName;
+                }
+            }
+            return null;
+        }
+
+        function showObjectInfo(objectName, x, y) {
+            const obj = objects[objectName];
+            if (!obj) return;
+            
+            const infoDiv = document.getElementById('objectInfo');
+            infoDiv.innerHTML = `
+                <div><strong>Hokkien:</strong> ${obj.hokkien}</div>
+                <div><strong>English:</strong> ${obj.english}</div>
+                <div><strong>Indonesian:</strong> ${obj.indonesian}</div>
+            `;
+            
+            infoDiv.style.left = (x + 10) + 'px';
+            infoDiv.style.top = (y - 10) + 'px';
+            infoDiv.style.display = 'block';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                infoDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Score: ${score}/${totalObjects}`;
+            
+            if (score === totalObjects) {
+                // Show next level button
+                document.getElementById('nextButton').style.display = 'block';
+                setTimeout(() => {
+                    alert('🎉 Study Room completed! Moving to Laundry Room...\\n書房完成！移動到洗衣房...\\nRuang Belajar selesai! Pindah ke Ruang Cuci...');
+                }, 500);
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'game-level-3.html';
+        }
+
+        function goToNextLevel() {
+            window.location.href = 'game-level-5.html';
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', function(event) {
+            const clickedObject = getClickedObject(event.clientX, event.clientY);
+            
+            if (clickedObject && !foundObjects.has(clickedObject)) {
+                foundObjects.add(clickedObject);
+                score++;
+                updateScore();
+                drawGame();
+                showObjectInfo(clickedObject, event.clientX, event.clientY);
+                
+                // Play success sound (if available)
+                console.log(`Found: ${clickedObject}`);
+            }
+        });
+
+        // Hover effect for cursor
+        canvas.addEventListener('mousemove', function(event) {
+            const hoveredObject = getClickedObject(event.clientX, event.clientY);
+            
+            if (hoveredObject && !foundObjects.has(hoveredObject)) {
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'crosshair';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                goBack();
+            } else if (event.key === 'r' || event.key === 'R') {
+                // Reset game
+                foundObjects.clear();
+                score = 0;
+                updateScore();
+                document.getElementById('nextButton').style.display = 'none';
+                drawGame();
+            } else if (event.key === 'n' || event.key === 'N') {
+                if (score === totalObjects) {
+                    goToNextLevel();
+                }
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', resizeCanvas);
+
+        // Initialize
+        backgroundImage.onload = function() {
+            isImageLoaded = true;
+            resizeCanvas();
+        };
+        
+        backgroundImage.src = '4/4.jpg';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            resizeCanvas();
+            updateScore();
+        });
+    </script>
+</body>
+</html>

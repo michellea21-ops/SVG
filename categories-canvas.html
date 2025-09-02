@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Categories - Hokkien Learning</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Language Toggle */
+        .language-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+        
+    </style>
+</head>
+<body>
+    
+    <!-- Language Toggle Button -->
+    <div class="language-toggle" onclick="toggleLanguage()" id="lang-toggle">🇺🇸 EN</div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentLanguage = 'en';
+        let backgroundImage = new Image();
+        let isImageLoaded = false;
+        
+        // Button positions based on Categories.svg layout
+        const buttons = {
+            guessWhat: { x: 0.37, y: 0.32, width: 0.26, height: 0.08 }, // "Guess What?" text area
+            hiddenObject: { x: 0.30, y: 0.57, width: 0.38, height: 0.18 } // "Hidden Object" text area
+        };
+        
+        const translations = {
+            en: {
+                toggleButton: "🇺🇸 EN",
+                categories: "Categories",
+                guessWhat: "Guess What?",
+                hiddenObject: "Hidden Object",
+                comingSoon: "Coming Soon!",
+                startHidden: "Starting Hidden Object game..."
+            },
+            id: {
+                toggleButton: "🇮🇩 ID",
+                categories: "Kategori",
+                guessWhat: "Tebak Apa?",
+                hiddenObject: "Objek Tersembunyi",
+                comingSoon: "Segera Hadir!",
+                startHidden: "Memulai permainan Objek Tersembunyi..."
+            }
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Set canvas size
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            // Redraw if image is loaded
+            if (isImageLoaded) {
+                drawGame();
+            }
+        }
+
+        function drawGame() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate drawing dimensions (Categories.svg is 1364.71 x 768.67)
+            const aspectRatio = 1364.71 / 768.67;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            // Draw background image only - SVG already contains all the text
+            ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
+        }
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'id' : 'en';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            
+            // Update language toggle button
+            document.getElementById('lang-toggle').textContent = lang.toggleButton;
+        }
+
+        function getClickedButton(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            
+            // Calculate drawing dimensions to match drawGame function
+            const aspectRatio = 1364.71 / 768.67;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (canvas.width / canvas.height > aspectRatio) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * aspectRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+                drawY = 0;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / aspectRatio;
+                drawX = 0;
+                drawY = (canvas.height - drawHeight) / 2;
+            }
+            
+            // Convert to relative coordinates within the actual image bounds
+            const relX = (canvasX - drawX) / drawWidth;
+            const relY = (canvasY - drawY) / drawHeight;
+            
+            // Check if click is within image bounds
+            if (relX < 0 || relX > 1 || relY < 0 || relY > 1) {
+                return null;
+            }
+            
+            // Check which button was clicked
+            for (const [buttonName, button] of Object.entries(buttons)) {
+                if (relX >= button.x && relX <= button.x + button.width &&
+                    relY >= button.y && relY <= button.y + button.height) {
+                    return buttonName;
+                }
+            }
+            return null;
+        }
+
+        function goBack() {
+            window.location.href = 'Li-Ho-canvas.html';
+        }
+
+        // Game functions
+        function startGuessWhat() {
+            const lang = translations[currentLanguage];
+            alert(lang.comingSoon);
+        }
+
+        function startHiddenObject() {
+            const lang = translations[currentLanguage];
+            // Navigate to hidden object game level 1
+            window.location.href = 'game-level-1.html';
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', function(event) {
+            const clickedButton = getClickedButton(event.clientX, event.clientY);
+            
+            switch(clickedButton) {
+                case 'guessWhat':
+                    startGuessWhat();
+                    break;
+                case 'hiddenObject':
+                    startHiddenObject();
+                    break;
+            }
+        });
+        
+        // Add hover effects
+        canvas.addEventListener('mousemove', function(event) {
+            const hoveredButton = getClickedButton(event.clientX, event.clientY);
+            canvas.style.cursor = hoveredButton ? 'pointer' : 'default';
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                goBack();
+            } else if (event.key === 'l' || event.key === 'L') {
+                toggleLanguage();
+            } else if (event.key === '1') {
+                startGuessWhat();
+            } else if (event.key === '2') {
+                startHiddenObject();
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', resizeCanvas);
+
+        // Initialize
+        backgroundImage.onload = function() {
+            isImageLoaded = true;
+            resizeCanvas();
+        };
+        
+        backgroundImage.src = 'Screen/Categories.svg';
+        
+        // Initialize with default language
+        document.addEventListener('DOMContentLoaded', function() {
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>

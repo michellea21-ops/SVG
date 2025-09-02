@@ -22,26 +22,6 @@
             object-fit: contain;
         }
         
-        /* Back button */
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 20;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #333;
-            border-radius: 15px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        .back-button:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: scale(1.05);
-        }
         
         /* Next level button */
         .next-button {
@@ -93,20 +73,99 @@
             z-index: 30;
             display: none;
         }
+        
+        /* Hint button */
+        .hint-button {
+            position: absolute;
+            top: 20px;
+            right: 200px;
+            z-index: 20;
+            background: rgba(255, 165, 0, 0.9);
+            color: white;
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .hint-button:hover {
+            background: rgba(255, 165, 0, 1);
+            transform: scale(1.05);
+        }
+        
+        /* Hint overlay */
+        .hint-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 40;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .hint-content {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            margin: 20px;
+        }
+        
+        .hint-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
-    <!-- Back button -->
-    <div class="back-button" onclick="goBack()">← Back to Level 3</div>
     
     <!-- Next level button -->
     <div class="next-button" id="nextButton" onclick="goToNextLevel()">Next Level →</div>
+    
+    <!-- Hint button -->
+    <div class="hint-button" onclick="showHint()">💡 Hint</div>
     
     <!-- Score display -->
     <div class="score-display" id="score">Score: 0/9</div>
     
     <!-- Object info popup -->
     <div class="object-info" id="objectInfo"></div>
+    
+    <!-- Hint overlay -->
+    <div class="hint-overlay" id="hintOverlay">
+        <span class="hint-close" onclick="hideHint()">&times;</span>
+        <div class="hint-content">
+            <h3>📚 Study Room Hints</h3>
+            <p><strong>Look for these study items:</strong></p>
+            <ul style="text-align: left;">
+                <li>📰 <strong>Newspaper</strong> - Reading material on the left</li>
+                <li>👨 <strong>Father</strong> - Person in the room</li>
+                <li>📺 <strong>Television</strong> - Screen entertainment device</li>
+                <li>📞 <strong>Phone</strong> - Communication device</li>
+                <li>🖊 <strong>Pen</strong> - Writing instrument (ink)</li>
+                <li>✏️ <strong>Pencil</strong> - Writing instrument (graphite)</li>
+                <li>📄 <strong>Paper</strong> - Writing/drawing surface</li>
+                <li>📝 <strong>Notes</strong> - Written information</li>
+                <li>🧩 <strong>Eraser</strong> - Small tool for removing marks</li>
+            </ul>
+            <p><em>Tip: Look carefully at the desk area for small writing tools!</em></p>
+        </div>
+    </div>
     
     <canvas id="gameCanvas"></canvas>
 
@@ -118,6 +177,9 @@
         let score = 0;
         let totalObjects = 9;
         let foundObjects = new Set();
+        
+        // X button position (top-right corner of the image)
+        const closeButton = { x: 0.92, y: 0.02, width: 0.06, height: 0.08 };
         
         // Object positions for study room scene (coordinates based on 4.jpg layout)
         const objects = {
@@ -220,6 +282,17 @@
             
             ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
             
+            // Cover the duplicate X button (left one at ~85-88% position)
+            const duplicateXButton = { x: 0.85, y: 0.02, width: 0.06, height: 0.08 };
+            const coverX = drawX + (drawWidth * duplicateXButton.x);
+            const coverY = drawY + (drawHeight * duplicateXButton.y);
+            const coverWidth = drawWidth * duplicateXButton.width;
+            const coverHeight = drawHeight * duplicateXButton.height;
+            
+            // Use the background color to cover the duplicate button (light blue from office scene)
+            ctx.fillStyle = '#8cc8e6'; // Light blue background color from the office image
+            ctx.fillRect(coverX, coverY, coverWidth, coverHeight);
+            
             // Draw found object indicators
             ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 3;
@@ -275,10 +348,16 @@
                 return null;
             }
             
+            // Check if close button was clicked first
+            if (relX >= closeButton.x && relX <= closeButton.x + closeButton.width &&
+                relY >= closeButton.y && relY <= closeButton.y + closeButton.height) {
+                return 'close';
+            }
+            
             // Check which object was clicked (smallest objects first to avoid overlap issues)
             const objectEntries = Object.entries(objects).sort((a, b) => {
                 const areaA = a[1].width * a[1].height;
-                const areaB = b[1].width * b[1].height;
+                const areaB = b[1].width * b[1.height;
                 return areaA - areaB;
             });
             
@@ -331,12 +410,22 @@
         function goToNextLevel() {
             window.location.href = 'game-level-5.html';
         }
+        
+        function showHint() {
+            document.getElementById('hintOverlay').style.display = 'flex';
+        }
+        
+        function hideHint() {
+            document.getElementById('hintOverlay').style.display = 'none';
+        }
 
         // Event listeners
         canvas.addEventListener('click', function(event) {
             const clickedObject = getClickedObject(event.clientX, event.clientY);
             
-            if (clickedObject && !foundObjects.has(clickedObject)) {
+            if (clickedObject === 'close') {
+                goBack();
+            } else if (clickedObject && !foundObjects.has(clickedObject)) {
                 foundObjects.add(clickedObject);
                 score++;
                 updateScore();
@@ -352,7 +441,9 @@
         canvas.addEventListener('mousemove', function(event) {
             const hoveredObject = getClickedObject(event.clientX, event.clientY);
             
-            if (hoveredObject && !foundObjects.has(hoveredObject)) {
+            if (hoveredObject === 'close') {
+                canvas.style.cursor = 'pointer';
+            } else if (hoveredObject && !foundObjects.has(hoveredObject)) {
                 canvas.style.cursor = 'pointer';
             } else {
                 canvas.style.cursor = 'crosshair';
@@ -362,7 +453,13 @@
         // Keyboard shortcuts
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                goBack();
+                // First check if hint is open, close it; otherwise go back
+                const hintOverlay = document.getElementById('hintOverlay');
+                if (hintOverlay.style.display === 'flex') {
+                    hideHint();
+                } else {
+                    goBack();
+                }
             } else if (event.key === 'r' || event.key === 'R') {
                 // Reset game
                 foundObjects.clear();
@@ -374,6 +471,9 @@
                 if (score === totalObjects) {
                     goToNextLevel();
                 }
+            } else if (event.key === 'h' || event.key === 'H') {
+                // Show hint with 'H' key
+                showHint();
             }
         });
 

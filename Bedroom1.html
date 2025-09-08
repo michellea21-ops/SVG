@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bedroom | Hokkien Learning</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: black;
+      overflow: hidden;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: url('2/Background.svg') no-repeat center/contain;
+    }
+
+    .next-button {
+      position: absolute;
+      top: 2vh;
+      left: 5vw;
+      z-index: 20;
+      background: rgba(0, 150, 255, 0.9);
+      color: white;
+      border: 2px solid #333;
+      border-radius: 1em;
+      padding: 0.8em 1.5em;
+      cursor: pointer;
+      font-size: clamp(12px, 2vw, 18px);
+      font-weight: bold;
+      transition: all 0.3s ease;
+      display: none;
+    }
+    .next-button:hover {
+      background: rgba(0, 150, 255, 1);
+      transform: scale(1.05);
+    }
+
+    .score-display {
+      position: absolute;
+      top: 2vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: rgba(0, 150, 0, 0.8);
+      color: white;
+      border-radius: 1em;
+      padding: 0.8em 1.5em;
+      font-size: clamp(12px, 2vw, 18px);
+      font-weight: bold;
+    }
+
+    #exitButton {
+      position: absolute;
+      top: 2vh;
+      right: 2vw;
+      z-index: 50;
+      font-size: clamp(20px, 3vw, 30px);
+      color: white;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 30%;
+      width: 2.5em;
+      height: 2.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #exitButton:hover {
+      background: rgb(79, 76, 76);
+      transform: scale(1.1);
+    }
+
+    .button-container {
+      position: absolute;
+      bottom: 2vh;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 2vw;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 90vw;
+      z-index: 50;
+    }
+
+    .action-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .action-button:hover {
+      transform: scale(1.05);
+    }
+    .action-button img {
+      width: clamp(200px, 15vw, 300px);
+      height: auto;
+    }
+
+    .object-svg {
+      position: absolute;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      z-index: 40;
+    }
+
+    .highlight {
+      position: absolute;
+      border: 4px solid lime;
+      box-sizing: border-box;
+      pointer-events: none;
+      z-index: 45;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="exitButton" onclick="exitToMainMenu()">✖</div>
+    <div class="next-button" id="nextButton" onclick="goToNextLevel()">Next Level →</div>
+    <div class="score-display" id="score">Score: 0/3</div>
+    <div class="button-container" id="buttonContainer"></div>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById('gameContainer');
+    let score = 0;
+    const targetScore = 3;
+    let correctObjects = new Set();
+
+    // Objek klik
+    const objectsData = {
+      "bed":  { x: 0.31, y: 0.34, width: 0.4, height: 0.6, name: "床 (bîn-chhn̂g)", svg:"2/Bed.svg" },
+      "blanket": { x: 0.385, y: 0.54, width: 0.25, height: 0.35, name: "鋪毯子 (chhu thán-á)", svg:"2/Blanket.svg" },
+      "bolster":   { x: 0.36, y: 0.53,  width: 0.2, height: 0.3, name: "加強 (ka-chiong)", svg:"2/Bolster.svg" },
+      "charger":   { x: 0.73, y: 0.75,  width: 0.1, height: 0.1, name: "充電器 (chong tiān ki)", svg:"2/Charger.svg" },
+      "desk":    { x: 0.65, y: 0.35, width: 0.28, height: 0.38,  name: "書桌 (tha̍k-chheh-toh-á)", svg:"2/Desk.svg" },
+      "file":  { x: 0.8, y: 0.219, width: 0.17, height: 0.2, name: "剉子 (kì-lè)", svg:"2/Folder.svg" },
+      "headphone":    { x: 0.8, y: 0.68, width: 0.09, height: 0.09, name: "耳機 (hīⁿ-ki)", svg:"2/Headphone.svg" },
+      "keyboard": { x: 0.85, y: 0.65, width: 0.12, height: 0.38, name: "鍵盤 (kiàn-poâⁿ)", svg:"2/Keyboard.svg" },
+      "nightstand":    { x: 0.34, y: 0.43, width: 0.07, height: 0.2, name: "床頭櫃 (chhn̂g-thâu-kūi)", svg:"2/Nightstand.svg" },
+      "wardrobe":   { x: 0, y: 0.1, width: 0.4, height: 0.55, name: "衣櫥 (i-tû)", svg:"2/Wardrobe.svg" },
+      "pant":   { x: 0.1, y: 0.17, width: 0.25, height: 0.35, name: "內褲 (lāi-khò)", svg:"2/Pants.svg" },
+      "pc":   { x: 0.7, y: 0.259, width: 0.1, height: 0.16, name: "電腦 (tiān-náu)", svg:"2/PC.svg" },
+      "pillow":   { x: 0.43, y: 0.4, width: 0.15, height: 0.13, name: "枕頭 (chím-thâu)", svg:"2/Pillow.svg" },
+      "plug":   { x: 0.67, y: 0.7, width: 0.1, height: 0.2, name: "插座 (chhah-chō)", svg:"2/Plug.svg" },
+      "shirt":   { x: 0.03, y: 0.17, width: 0.25, height: 0.25, name: "衫 (saⁿ)", svg:"2/Shirt.svg" }
+    };
+
+    // Hokkien words tetap lengkap
+    const hokkienWords = [
+      { hokkien: "床 (bîn-chhn̂g)", audio: "2/bîn-chhn̂g.mp3", svg: "2/床 (bîn-chhn̂g).svg" },
+      { hokkien: "鋪毯子 (chhu thán-á)", audio: "2/chhu thán-á.mp3", svg: "2/鋪毯子 (chhu thán-á).svg" },
+      { hokkien: "加強 (ka-chiong)", audio: "2/ka-chiong.mp3", svg: "2/加強 (ka-chiong).svg" },
+      { hokkien: "充電器 (chong tiān ki)", audio: "2/chong tiān ki.mp3", svg: "2/充電器 (chong tiān ki).svg" },
+      { hokkien: "書桌 (tha̍k-chheh-toh-á)", audio: "2/tha̍k-chheh-toh-á.mp3", svg: "2/書桌 (tha̍k-chheh-toh-á).svg" },
+      { hokkien: "剉子 (kì-lè)", audio: "2/kì-lè.mp3", svg: "2/剉子 (kì-lè).svg" },
+      { hokkien: "耳機 (hīⁿ-ki)", audio: "2/hīⁿ-ki.mp3", svg: "2/耳機 (hīⁿ-ki).svg" },
+      { hokkien: "鍵盤 (kiàn-poâⁿ)", audio: "2/kiàn-poâⁿ.mp3", svg: "2/鍵盤 (kiàn-poâⁿ).svg" },
+      { hokkien: "床頭櫃 (chhn̂g-thâu-kūi)", audio: "2/chhn̂g-thâu-kūi.m4a", svg: "2/床頭櫃 (chhn̂g-thâu-kūi).svg" },
+      { hokkien: "內褲 (lāi-khò)", audio: "2/lāi-khò.mp3", svg: "2/內褲 (lāi-khò).svg" },
+      { hokkien: "電腦 (tiān-náu)", audio: "2/tiān-náu.mp3", svg: "2/電腦 (tiān-náu).svg" },
+      { hokkien: "枕頭 (chím-thâu)", audio: "2/chím-thâu.mp3", svg: "2/枕頭 (chím-thâu).svg" },
+      { hokkien: "插座 (chhah-chō)", audio: "2/chhah-chō.mp3", svg: "2/插座 (chhah-chō).svg" },
+      { hokkien: "衫 (saⁿ)", audio: "2/saⁿ.mp3", svg: "2/衫 (saⁿ).svg" },
+      { hokkien: "衣櫥 (i-tû)", audio: "2/i-tû.mp3", svg: "2/衣櫥 (i-tû).svg" }
+    ];
+
+    // Overlay SVG, bisa atur posisi & ukuran
+    const overlaySVGs = [
+      { src: "2/Chair.svg", x: 0.65, y: 0.343, width: 0.22, height: 0.32 },
+    ];
+
+    function createObjects() {
+      // Objek klik
+      Object.values(objectsData).forEach(obj => {
+        const img = document.createElement('img');
+        img.src = obj.svg;
+        img.className = "object-svg";
+        gameContainer.appendChild(img);
+        obj.element = img;
+        positionObject(obj);
+
+        img.addEventListener('click', () => {
+          if(!correctObjects.has(obj.name)) {
+            score++;
+            correctObjects.add(obj.name);
+            updateScore();
+            createHighlight(obj);
+            if(score >= targetScore) alert("Level complete!");
+          }
+        });
+      });
+
+      // Overlay SVG
+      overlaySVGs.forEach(item => {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.className = "object-svg";
+        img.style.pointerEvents = "none"; // non-interactive
+        const W = gameContainer.clientWidth;
+        const H = gameContainer.clientHeight;
+        img.style.left = (item.x * W) + "px";
+        img.style.top = (item.y * H) + "px";
+        img.style.width = (item.width * W) + "px";
+        img.style.height = (item.height * H) + "px";
+        gameContainer.appendChild(img);
+      });
+    }
+
+    function positionObject(obj) {
+      const W = gameContainer.clientWidth;
+      const H = gameContainer.clientHeight;
+      obj.element.style.left = (obj.x * W) + "px";
+      obj.element.style.top = (obj.y * H) + "px";
+      obj.element.style.width = (obj.width * W) + "px";
+      obj.element.style.height = (obj.height * H) + "px";
+    }
+
+    function createHighlight(obj) {
+      const div = document.createElement('div');
+      div.className = "highlight";
+
+      // Gunakan ukuran aktual objek
+      const rect = obj.element.getBoundingClientRect();
+      const containerRect = gameContainer.getBoundingClientRect();
+      div.style.left = (rect.left - containerRect.left) + "px";
+      div.style.top = (rect.top - containerRect.top) + "px";
+      div.style.width = rect.width + "px";
+      div.style.height = rect.height + "px";
+
+      // Tambahkan centang di tengah
+      const check = document.createElement('div');
+      check.innerText = "✓";
+      check.style.position = "absolute";
+      check.style.color = "lime";
+      check.style.fontSize = Math.min(rect.width, rect.height)/2 + "px";
+      check.style.top = "50%";
+      check.style.left = "50%";
+      check.style.transform = "translate(-50%, -50%)";
+      div.appendChild(check);
+
+      gameContainer.appendChild(div);
+    }
+
+    function updateScore() {
+      document.getElementById('score').innerText = `Score: ${score}/${targetScore}`;
+    }
+
+    function goToNextLevel() {
+      if (score >= targetScore) window.location.href = 'game-level-3.html';
+    }
+
+    function exitToMainMenu() {
+      window.location.href = 'Li-Ho-canvas.html';
+    }
+
+    function createActionButtons() {
+      const buttonContainer = document.getElementById('buttonContainer');
+      buttonContainer.innerHTML = "";
+      let selectedWords = [];
+      while(selectedWords.length < 3) {
+        const rand = hokkienWords[Math.floor(Math.random()*hokkienWords.length)];
+        if(!selectedWords.includes(rand)) selectedWords.push(rand);
+      }
+      selectedWords.forEach(word => {
+        const btn = document.createElement('div');
+        btn.className = "action-button";
+        btn.innerHTML = `<img src="${word.svg}" alt="${word.hokkien}">`;
+        btn.onclick = () => {
+          const audio = new Audio(word.audio);
+          audio.play();
+        };
+        buttonContainer.appendChild(btn);
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      Object.values(objectsData).forEach(positionObject);
+      overlaySVGs.forEach(item => {
+        const imgs = document.querySelectorAll(`img[src='${item.src}']`);
+        imgs.forEach(img => {
+          const W = gameContainer.clientWidth;
+          const H = gameContainer.clientHeight;
+          img.style.left = (item.x * W) + "px";
+          img.style.top = (item.y * H) + "px";
+          img.style.width = (item.width * W) + "px";
+          img.style.height = (item.height * H) + "px";
+        });
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      createObjects();
+      createActionButtons();
+    });
+  </script>
+</body>
+</html>
+
+
+
+
